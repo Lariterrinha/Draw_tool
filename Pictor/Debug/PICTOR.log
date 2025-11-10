@@ -1,0 +1,15 @@
+﻿  Eleve.cpp
+D:\franca\ESIEE\Advanced C++\GIthub\1\PICTOR\ObjGeom.h(146,22): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+  (compilando o arquivo fonte 'Eleve.cpp')
+  
+D:\franca\ESIEE\Advanced C++\GIthub\1\PICTOR\ObjGeom.h(148,21): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+  (compilando o arquivo fonte 'Eleve.cpp')
+  
+D:\franca\ESIEE\Advanced C++\GIthub\1\PICTOR\Tool.h(171,24): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+  (compilando o arquivo fonte 'Eleve.cpp')
+  
+  GL.cpp
+  Gerando Código...
+  PICTOR.vcxproj -> D:\franca\ESIEE\Advanced C++\GIthub\1\PICTOR\Debug\Pictor.exe
+  'pwsh.exe' não é reconhecido como um comando interno
+  ou externo, um programa operável ou um arquivo em lotes.

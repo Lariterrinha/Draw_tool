@@ -1,0 +1,169 @@
+﻿/* Copyright (c) 2024 Lilian Buzer - All rights reserved - */
+#pragma once
+
+#include "Color.h"
+#include "V2.h"
+#include "ObjAttr.h"
+#include "Graphics.h"
+#include <algorithm>
+#include <cmath>
+
+class ObjGeom
+{
+public :
+	ObjAttr drawInfo_;
+
+	ObjGeom() {}
+	ObjGeom(ObjAttr  drawInfo) : drawInfo_(drawInfo)   {  }
+
+	virtual void draw(Graphics & G) {}
+
+	// bounding box: canto inferior-esquerdo P e tamanho size (sobrescrever nas subclasses)
+	virtual void getBoundingBox(V2& P, V2& size) const { P = V2(0,0); size = V2(0,0); }
+
+	// hit test padrão usa bounding box (sobrescrever quando precisar de precisão)
+	virtual bool contains(const V2& p) const
+	{
+		V2 P; V2 size;
+		getBoundingBox(P, size);
+		return (p.x >= P.x && p.x <= P.x + size.x && p.y >= P.y && p.y <= P.y + size.y);
+	}
+};
+
+
+class ObjRectangle : public ObjGeom
+{
+public :
+	V2 P1_;
+	V2 P2_;
+
+	ObjRectangle(ObjAttr  drawInfo, V2 P1, V2 P2) : ObjGeom(drawInfo)
+	{
+		P1_ = P1;
+		P2_ = P2;
+	}
+
+	void draw(Graphics& G) override
+	{
+		V2 P, size;
+		getPLH(P1_, P2_, P, size);
+
+		if ( drawInfo_.isFilled_ )
+  		   G.drawRectangle(P,size, drawInfo_.interiorColor_, true);
+
+		G.drawRectangle(P, size, drawInfo_.borderColor_, false, drawInfo_.thickness_);
+	}
+
+	void getBoundingBox(V2& P, V2& size) const override
+	{
+		getPLH(P1_, P2_, P, size);
+	}
+
+	bool contains(const V2& p) const override
+	{
+		V2 P; V2 size;
+		getBoundingBox(P, size);
+		return (p.x >= P.x && p.x <= P.x + size.x && p.y >= P.y && p.y <= P.y + size.y);
+	}
+};
+
+
+class ObjSegment : public ObjGeom
+{
+public:
+	V2 P1_;
+	V2 P2_;
+
+	ObjSegment(ObjAttr  drawInfo, V2 P1, V2 P2) : ObjGeom(drawInfo)
+	{
+		P1_ = P1;
+		P2_ = P2;
+	}
+
+	void draw(Graphics& G) override
+	{
+		V2 P, size;
+	 
+		G.drawLine(P1_, P2_, drawInfo_.borderColor_, drawInfo_.thickness_);
+	}
+
+	void getBoundingBox(V2& P, V2& size) const override
+	{
+		int xmin = std::min(P1_.x, P2_.x);
+		int ymin = std::min(P1_.y, P2_.y);
+		int xmax = std::max(P1_.x, P2_.x);
+		int ymax = std::max(P1_.y, P2_.y);
+		int pad = std::max(4, drawInfo_.thickness_);
+		xmin -= pad; ymin -= pad; xmax += pad; ymax += pad;
+		P = V2(xmin, ymin);
+		size = V2(xmax - xmin, ymax - ymin);
+	}
+
+	bool contains(const V2& p) const override
+	{
+		// distância ponto->segmento com tolerância
+		double x0 = p.x, y0 = p.y;
+		double x1 = P1_.x, y1 = P1_.y;
+		double x2 = P2_.x, y2 = P2_.y;
+		double dx = x2 - x1, dy = y2 - y1;
+		if (dx == 0 && dy == 0) {
+			double d2 = (x0-x1)*(x0-x1) + (y0-y1)*(y0-y1);
+			double tol = drawInfo_.thickness_ + 3;
+			return d2 <= tol*tol;
+		}
+		double t = ((x0-x1)*dx + (y0-y1)*dy) / (dx*dx + dy*dy);
+		if (t < 0) t = 0; else if (t > 1) t = 1;
+		double px = x1 + t*dx, py = y1 + t*dy;
+		double d2 = (x0-px)*(x0-px) + (y0-py)*(y0-py);
+		double tol = drawInfo_.thickness_ + 4;
+		return d2 <= tol*tol;
+	}
+};
+
+
+
+class ObjCircle : public ObjGeom
+{
+public:
+	V2 P1_;
+	V2 P2_;
+
+	ObjCircle(ObjAttr  drawInfo, V2 P1, V2 P2) : ObjGeom(drawInfo)
+	{
+		P1_ = P1;
+		P2_ = P2;
+	}
+
+	void draw(Graphics& G) override
+	{
+		V2 size;
+
+		int r;
+
+		V2 diff = P2_ - P1_;
+		r = (int)diff.norm();
+
+		// circulo 
+		if (drawInfo_.isFilled_)
+			G.drawCircle(P1_, r, drawInfo_.interiorColor_, true);
+
+		G.drawCircle(P1_, r, drawInfo_.borderColor_, false, drawInfo_.thickness_);
+	}
+
+	void getBoundingBox(V2& P, V2& size) const override
+	{
+		V2 diff = P2_ - P1_;
+		int r = (int)diff.norm();
+		P = V2(P1_.x - r, P1_.y - r);
+		size = V2(2*r, 2*r);
+	}
+
+	bool contains(const V2& p) const override
+	{
+		V2 d = p - P1_;
+		double dist = d.norm();
+		V2 diff = P2_ - P1_;
+		double r = diff.norm();
+		return dist <= r + 1.0;
+	}
+};

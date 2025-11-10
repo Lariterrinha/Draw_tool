@@ -1,0 +1,97 @@
+﻿/* Copyright (c) 2024 Lilian Buzer - All rights reserved - */
+#pragma once
+
+#include "Color.h"
+#include "V2.h"
+#include "ObjAttr.h"
+#include "Graphics.h"
+
+class ObjGeom
+{
+public :
+	ObjAttr drawInfo_;
+
+	ObjGeom() {}
+	ObjGeom(ObjAttr  drawInfo) : drawInfo_(drawInfo)   {  }
+
+	virtual void draw(Graphics & G) {}
+};
+
+
+class ObjRectangle : public ObjGeom
+{
+public :
+	V2 P1_;
+	V2 P2_;
+
+	ObjRectangle(ObjAttr  drawInfo, V2 P1, V2 P2) : ObjGeom(drawInfo)
+	{
+		P1_ = P1;
+		P2_ = P2;
+	}
+
+	void draw(Graphics& G) override
+	{
+		V2 P, size;
+		getPLH(P1_, P2_, P, size);
+
+		if ( drawInfo_.isFilled_ )
+  		   G.drawRectangle(P,size, drawInfo_.interiorColor_, true);
+
+		G.drawRectangle(P, size, drawInfo_.borderColor_, false, drawInfo_.thickness_);
+	}
+};
+
+
+class ObjSegment : public ObjGeom
+{
+public:
+	V2 P1_;
+	V2 P2_;
+
+	ObjSegment(ObjAttr  drawInfo, V2 P1, V2 P2) : ObjGeom(drawInfo)
+	{
+		P1_ = P1;
+		P2_ = P2;
+	}
+
+	void draw(Graphics& G) override
+	{
+		V2 P, size;
+	 
+		G.drawLine(P1_, P2_, drawInfo_.borderColor_, drawInfo_.thickness_);
+	}
+};
+
+
+
+class ObjCircle : public ObjGeom
+{
+public:
+	V2 P1_;
+	V2 P2_;
+
+	ObjCircle(ObjAttr  drawInfo, V2 P1, V2 P2) : ObjGeom(drawInfo)
+	{
+		P1_ = P1;
+		P2_ = P2;
+	}
+
+	void draw(Graphics& G) override
+	{
+		V2 size;
+
+		int r;
+
+		V2 diff = P2_ - P1_;
+		r = (int)diff.norm();
+
+		// circulo 
+		if (drawInfo_.isFilled_)
+			G.drawCircle(P1_, r, drawInfo_.interiorColor_, true);
+
+		G.drawCircle(P1_, r, drawInfo_.borderColor_, false, drawInfo_.thickness_);
+
+	
+	}
+};
