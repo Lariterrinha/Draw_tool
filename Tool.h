@@ -200,6 +200,39 @@ public:
 			}
 		}
 	}
+	// move object to front (end of list = drawn last = on top)
+	void bringToFront(Model& Data)
+	{
+		if (!selectedObj_) return;
+		// find and move to end
+		for (auto it = Data.LObjets.begin(); it != Data.LObjets.end(); ++it)
+		{
+			if (it->get() == selectedObj_.get())
+			{
+				auto obj = *it;
+				Data.LObjets.erase(it);
+				Data.LObjets.push_back(obj);
+				return;
+			}
+		}
+	}
+
+	// move object to back (start of list = drawn first = behind)
+	void sendToBack(Model& Data)
+	{
+		if (!selectedObj_) return;
+		// find and move to beginning
+		for (auto it = Data.LObjets.begin(); it != Data.LObjets.end(); ++it)
+		{
+			if (it->get() == selectedObj_.get())
+			{
+				auto obj = *it;
+				Data.LObjets.erase(it);
+				Data.LObjets.insert(Data.LObjets.begin(), obj);
+				return;
+			}
+		}
+	}
 
 	void processEvent(const Event& E, Model& Data) override
 	{
@@ -207,13 +240,13 @@ public:
 		if (E.Type == EventType::MouseUp && E.info == "0")
 		{
 			std::shared_ptr<ObjGeom> found = nullptr;
-			// procura do topo para baixo
+			// procura do topo para baixo (up to down)
 			for (int i = (int)Data.LObjets.size() - 1; i >= 0; --i)
 			{
 				auto &obj = Data.LObjets[i];
 				if (!obj) continue;
 
-				// usa contains polimórfico
+				// usa contains polimorfico
 				if (obj->contains(Data.currentMousePos)) { found = obj; break; }
 			}
 
