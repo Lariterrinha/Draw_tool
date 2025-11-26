@@ -254,6 +254,73 @@ public:
 	}
 };
 
+class ToolEditPoints : public Tool
+{
+	V2* grabbedPoint_ = nullptr;
+	bool dragging_ = false;
+
+public:
+	ToolEditPoints() : Tool() {}
+
+	void processEvent(const Event& E, Model& Data) override
+	{
+		if (E.Type == EventType::MouseDown && E.info == "0")
+		{
+			V2 mouse = Data.currentMousePos;
+			grabbedPoint_ = nullptr;
+			dragging_ = false;
+
+			const float radius = 10.0f; 
+
+			for (int i = (int)Data.LObjets.size() - 1; i >= 0; --i)
+			{
+				auto& obj = Data.LObjets[i];
+				if (!obj) continue;
+
+				V2* candidate = obj->findClosestControlPoint(mouse, radius);
+				if (candidate)
+				{
+					saveSceneSnapshot(Data); 
+					grabbedPoint_ = candidate;
+					dragging_ = true;
+					break;
+				}
+			}
+			return;
+		}
+
+		if (E.Type == EventType::MouseUp && E.info == "0")
+		{
+			grabbedPoint_ = nullptr;
+			dragging_ = false;
+			return;
+		}
+
+		if (E.Type == EventType::MouseMove)
+		{
+			if (dragging_ && grabbedPoint_)
+			{
+				*grabbedPoint_ = Data.currentMousePos;
+			}
+		}
+	}
+
+	void draw(Graphics& G, const Model& Data) override
+	{
+		std::vector<V2> pts;
+		for (auto& obj : Data.LObjets)
+		{
+			if (obj) obj->getControlPoints(pts);
+		}
+
+		for (const auto& p : pts)
+		{
+			G.drawCircle(p, 5, Color::Yellow, true, 2);
+			G.drawCircle(p, 5, Color::Black, false, 1);
+		}
+	}
+};
+
 
 class ToolSelect : public Tool
 {

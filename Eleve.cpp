@@ -12,15 +12,11 @@
 #include "Button.h"
 #include "Tool.h"
 
-
 using namespace std;
-
-// ------------------------------------
-// Histórico de cenas para UNDO
-// ------------------------------------
 static std::vector<std::string> gHistory;
+static std::shared_ptr<Tool> gPreviousTool;
 
-// transforma a cena atual em uma string
+
 std::string sceneToString(const Model& Data)
 {
 	std::ostringstream ss;
@@ -57,7 +53,7 @@ void saveSceneSnapshot(Model& Data)
 int main(int argc, char* argv[])
 {
 	std::cout << "Press ESC to abort" << endl;
-	Graphics::initMainWindow("Pictor", V2(1200, 800), V2(200, 200));
+	Graphics::initMainWindow("Pictor", V2(1600, 800), V2(200, 200));
 }
 
 void bntToolSegmentClick(Model& Data)   { Data.currentTool = make_shared<ToolSegment>(); }
@@ -164,6 +160,21 @@ void bntUndo(Model& Data) {
 	stringToScene(snapshot, Data);
 }
 
+void bntEditPoints(Model& Data)
+{
+	ToolEditPoints* edit = dynamic_cast<ToolEditPoints*>(Data.currentTool.get());
+	if (edit)
+	{
+		if (gPreviousTool)
+			Data.currentTool = gPreviousTool;
+		return;
+	}
+
+	gPreviousTool = Data.currentTool;
+	Data.currentTool = make_shared<ToolEditPoints>();
+}
+
+
 void initApp(Model& App)
 {
 	// choose default tool
@@ -249,6 +260,10 @@ void initApp(Model& App)
 	 App.LButtons.push_back(BUndo);
 	 x += s;
 
+	 auto BEditPts = make_shared<Button>("EditPts", V2(x, 0), V2(s, s),
+		 "outil_corner.png", bntEditPoints);
+	 App.LButtons.push_back(BEditPts);
+	 x += s;
 
 
 	// put two objets in the scene

@@ -1,8 +1,8 @@
 ﻿  Eleve.cpp
-C:\Users\biasa\Desktop\aa\Draw_tool\ObjGeom.h(181,22): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+C:\Users\biasa\Desktop\aa\Draw_tool\ObjGeom.h(221,22): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
   (compilando o arquivo fonte 'Eleve.cpp')
   
-C:\Users\biasa\Desktop\aa\Draw_tool\ObjGeom.h(183,21): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+C:\Users\biasa\Desktop\aa\Draw_tool\ObjGeom.h(223,21): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
   (compilando o arquivo fonte 'Eleve.cpp')
   
 C:\Users\biasa\Desktop\aa\Draw_tool\Tool.h(180,24): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados

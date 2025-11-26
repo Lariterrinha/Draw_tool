@@ -20,10 +20,8 @@ public :
 
 	virtual void draw(Graphics & G) {}
 
-	// bounding box: canto inferior-esquerdo P e tamanho size (sobrescrever nas subclasses)
 	virtual void getBoundingBox(V2& P, V2& size) const { P = V2(0,0); size = V2(0,0); }
 
-	// teste de colisão padrão usa bounding box (sobrescrever para casos melhores)
 	virtual bool contains(const V2& p) const
 	{
 		V2 P; V2 size;
@@ -31,7 +29,10 @@ public :
 		return (p.x >= P.x && p.x <= P.x + size.x && p.y >= P.y && p.y <= P.y + size.y);
 	}
 
-	virtual std::string serialize() const = 0;   // cada objeto sabe se descrever
+	virtual void getControlPoints(std::vector<V2>& out) const { }
+
+	virtual V2* findClosestControlPoint(const V2& mouse, float maxDist) { return nullptr; }
+	virtual std::string serialize() const = 0;   
 	static std::shared_ptr<ObjGeom> deserialize(const std::string& line);
 
 };
@@ -83,6 +84,26 @@ public :
 			<< drawInfo_.thickness_ << ' '
 			<< P1_.x << ' ' << P1_.y << ' ' << P2_.x << ' ' << P2_.y;
 		return ss.str();
+	}
+
+	void getControlPoints(std::vector<V2>& out) const override
+	{
+		out.push_back(P1_);
+		out.push_back(P2_);
+	}
+
+	V2* findClosestControlPoint(const V2& mouse, float maxDist) override
+	{
+		V2* best = nullptr;
+		double bestDist = maxDist;
+
+		double d = (P1_ - mouse).norm();
+		if (d <= bestDist) { bestDist = d; best = &P1_; }
+
+		d = (P2_ - mouse).norm();
+		if (d <= bestDist) { bestDist = d; best = &P2_; }
+
+		return best;
 	}
 
 };
@@ -151,6 +172,25 @@ public:
 			<< P1_.x << ' ' << P1_.y << ' ' << P2_.x << ' ' << P2_.y;
 		return ss.str();
 	}
+	void getControlPoints(std::vector<V2>& out) const override
+	{
+		out.push_back(P1_);
+		out.push_back(P2_);
+	}
+
+	V2* findClosestControlPoint(const V2& mouse, float maxDist) override
+	{
+		V2* best = nullptr;
+		double bestDist = maxDist;
+
+		double d = (P1_ - mouse).norm();
+		if (d <= bestDist) { bestDist = d; best = &P1_; }
+
+		d = (P2_ - mouse).norm();
+		if (d <= bestDist) { bestDist = d; best = &P2_; }
+
+		return best;
+	}
 
 };
 
@@ -214,6 +254,25 @@ public:
 			<< P1_.x << ' ' << P1_.y << ' ' << P2_.x << ' ' << P2_.y;
 		return ss.str();
 	}
+	void getControlPoints(std::vector<V2>& out) const override
+	{
+		out.push_back(P1_);
+		out.push_back(P2_);
+	}
+
+	V2* findClosestControlPoint(const V2& mouse, float maxDist) override
+	{
+		V2* best = nullptr;
+		double bestDist = maxDist;
+
+		double d = (P1_ - mouse).norm();
+		if (d <= bestDist) { bestDist = d; best = &P1_; }
+
+		d = (P2_ - mouse).norm();
+		if (d <= bestDist) { bestDist = d; best = &P2_; }
+
+		return best;
+	}
 
 };
 
@@ -275,6 +334,28 @@ public:
 		for (const auto& p : pts_)
 			ss << p.x << ' ' << p.y << ' ';
 		return ss.str();
+	}
+	void getControlPoints(std::vector<V2>& out) const override
+	{
+		for (const auto& p : pts_)
+			out.push_back(p);
+	}
+
+	V2* findClosestControlPoint(const V2& mouse, float maxDist) override
+	{
+		V2* best = nullptr;
+		double bestDist = maxDist;
+
+		for (auto& p : pts_)
+		{
+			double d = (p - mouse).norm();
+			if (d <= bestDist)
+			{
+				bestDist = d;
+				best = &p;
+			}
+		}
+		return best;
 	}
 
 };
