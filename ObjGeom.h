@@ -5,6 +5,10 @@
 #include "V2.h"
 #include "ObjAttr.h"
 #include "Graphics.h"
+#include <sstream>
+#include <memory>
+#include <vector>
+
 
 class ObjGeom
 {
@@ -26,6 +30,10 @@ public :
 		getBoundingBox(P, size);
 		return (p.x >= P.x && p.x <= P.x + size.x && p.y >= P.y && p.y <= P.y + size.y);
 	}
+
+	virtual std::string serialize() const = 0;   // cada objeto sabe se descrever
+	static std::shared_ptr<ObjGeom> deserialize(const std::string& line);
+
 };
 
 
@@ -63,6 +71,20 @@ public :
 		getBoundingBox(P, size);
 		return (p.x >= P.x && p.x <= P.x + size.x && p.y >= P.y && p.y <= P.y + size.y);
 	}
+	std::string serialize() const override
+	{
+		std::ostringstream ss;
+		ss << "RECT "
+			<< drawInfo_.borderColor_.R << ' ' << drawInfo_.borderColor_.G << ' '
+			<< drawInfo_.borderColor_.B << ' ' << drawInfo_.borderColor_.A << ' '
+			<< drawInfo_.isFilled_ << ' '
+			<< drawInfo_.interiorColor_.R << ' ' << drawInfo_.interiorColor_.G << ' '
+			<< drawInfo_.interiorColor_.B << ' ' << drawInfo_.interiorColor_.A << ' '
+			<< drawInfo_.thickness_ << ' '
+			<< P1_.x << ' ' << P1_.y << ' ' << P2_.x << ' ' << P2_.y;
+		return ss.str();
+	}
+
 };
 
 
@@ -116,8 +138,21 @@ public:
 		double tol = drawInfo_.thickness_ + 4;
 		return d2 <= tol*tol;
 	}
-};
+	std::string serialize() const override
+	{
+		std::ostringstream ss;
+		ss << "SEG "
+			<< drawInfo_.borderColor_.R << ' ' << drawInfo_.borderColor_.G << ' '
+			<< drawInfo_.borderColor_.B << ' ' << drawInfo_.borderColor_.A << ' '
+			<< drawInfo_.isFilled_ << ' '
+			<< drawInfo_.interiorColor_.R << ' ' << drawInfo_.interiorColor_.G << ' '
+			<< drawInfo_.interiorColor_.B << ' ' << drawInfo_.interiorColor_.A << ' '
+			<< drawInfo_.thickness_ << ' '
+			<< P1_.x << ' ' << P1_.y << ' ' << P2_.x << ' ' << P2_.y;
+		return ss.str();
+	}
 
+};
 
 
 class ObjCircle : public ObjGeom
@@ -166,6 +201,20 @@ public:
 		double r = diff.norm();
 		return dist <= r + 1.0; // toleranc
 	}
+	std::string serialize() const override
+	{
+		std::ostringstream ss;
+		ss << "CIRC "
+			<< drawInfo_.borderColor_.R << ' ' << drawInfo_.borderColor_.G << ' '
+			<< drawInfo_.borderColor_.B << ' ' << drawInfo_.borderColor_.A << ' '
+			<< drawInfo_.isFilled_ << ' '
+			<< drawInfo_.interiorColor_.R << ' ' << drawInfo_.interiorColor_.G << ' '
+			<< drawInfo_.interiorColor_.B << ' ' << drawInfo_.interiorColor_.A << ' '
+			<< drawInfo_.thickness_ << ' '
+			<< P1_.x << ' ' << P1_.y << ' ' << P2_.x << ' ' << P2_.y;
+		return ss.str();
+	}
+
 };
 
 
@@ -211,4 +260,86 @@ public:
 		P = V2(minx, miny);
 		size = V2(maxx - minx, maxy - miny);
 	}
+	std::string serialize() const override
+	{
+		std::ostringstream ss;
+		ss << "POLY "
+			<< drawInfo_.borderColor_.R << ' ' << drawInfo_.borderColor_.G << ' '
+			<< drawInfo_.borderColor_.B << ' ' << drawInfo_.borderColor_.A << ' '
+			<< drawInfo_.isFilled_ << ' '
+			<< drawInfo_.interiorColor_.R << ' ' << drawInfo_.interiorColor_.G << ' '
+			<< drawInfo_.interiorColor_.B << ' ' << drawInfo_.interiorColor_.A << ' '
+			<< drawInfo_.thickness_ << ' ';
+
+		ss << pts_.size() << ' ';
+		for (const auto& p : pts_)
+			ss << p.x << ' ' << p.y << ' ';
+		return ss.str();
+	}
+
 };
+
+
+inline std::shared_ptr<ObjGeom> ObjGeom::deserialize(const std::string& line)
+{
+	std::istringstream ss(line);
+	std::string type;
+	if (!(ss >> type)) return nullptr;
+
+	auto readAttr = [&](ObjAttr& attr)
+		{
+			Color bc, ic;
+			int isFilledInt;
+			int thick;
+
+			ss >> bc.R >> bc.G >> bc.B >> bc.A;
+			ss >> isFilledInt;
+			ss >> ic.R >> ic.G >> ic.B >> ic.A;
+			ss >> thick;
+
+			attr = ObjAttr(bc, isFilledInt != 0, ic, thick);
+		};
+
+	if (type == "RECT")
+	{
+		ObjAttr a;
+		readAttr(a);
+		int x1, y1, x2, y2;
+		ss >> x1 >> y1 >> x2 >> y2;
+		return std::make_shared<ObjRectangle>(a, V2(x1, y1), V2(x2, y2));
+	}
+	else if (type == "SEG")
+	{
+		ObjAttr a;
+		readAttr(a);
+		int x1, y1, x2, y2;
+		ss >> x1 >> y1 >> x2 >> y2;
+		return std::make_shared<ObjSegment>(a, V2(x1, y1), V2(x2, y2));
+	}
+	else if (type == "CIRC")
+	{
+		ObjAttr a;
+		readAttr(a);
+		int x1, y1, x2, y2;
+		ss >> x1 >> y1 >> x2 >> y2;
+		return std::make_shared<ObjCircle>(a, V2(x1, y1), V2(x2, y2));
+	}
+	else if (type == "POLY")
+	{
+		ObjAttr a;
+		readAttr(a);
+		size_t n;
+		ss >> n;
+		std::vector<V2> pts;
+		pts.reserve(n);
+		for (size_t i = 0; i < n; ++i)
+		{
+			int x, y;
+			ss >> x >> y;
+			pts.emplace_back(x, y);
+		}
+		return std::make_shared<ObjPolyLine>(a, pts);
+	}
+
+	return nullptr;
+}

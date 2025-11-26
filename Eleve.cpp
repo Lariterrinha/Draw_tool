@@ -2,6 +2,8 @@
 
 #include <string>
 #include <typeinfo>
+#include <fstream>
+#include <sstream>
 #include "V2.h"
 #include "Graphics.h"
 #include "Event.h" 
@@ -98,6 +100,34 @@ void bntToolPolygonClick(Model& Data)
 	Data.currentTool = make_shared<ToolPolygonalLine>();
 }
 
+void bntSaveScene(Model& Data) {
+	std::ofstream out("scene.txt");
+	if (!out) return;
+
+	for (auto& obj : Data.LObjets)
+	{
+		if (obj)
+			out << obj->serialize() << "\n";
+	}
+}
+
+void bntLoadScene(Model& Data)
+{
+	std::ifstream in("scene.txt");
+	if (!in) return;
+
+	Data.LObjets.clear();
+
+	std::string line;
+	while (std::getline(in, line))
+	{
+		auto obj = ObjGeom::deserialize(line);
+		if (obj)
+			Data.LObjets.push_back(obj);
+	}
+}
+
+
 void initApp(Model& App)
 {
 	// choose default tool
@@ -164,14 +194,24 @@ void initApp(Model& App)
 	 x += s;
 
 	 auto B12 = make_shared<Button>("Polygon", V2(x, 0), V2(s, s),
-		 "error.png", bntToolPolygonClick);
+		 "outil_polygone.png", bntToolPolygonClick);
 	 App.LButtons.push_back(B12);
 	 x += s;
 
+	 // botão Save
+	 auto BSave = make_shared<Button>("Save", V2(x, 0), V2(s, s),
+		 "outil_save.png", bntSaveScene);  
+	 App.LButtons.push_back(BSave);
+	 x += s;
+
+	 // botão Load
+	 auto BLoad = make_shared<Button>("Load", V2(x, 0), V2(s, s),
+		 "outil_load.png", bntLoadScene);  
+	 App.LButtons.push_back(BLoad);
+	 x += s;
 
 
 	// put two objets in the scene
-
 	ObjAttr DrawOpt1 = ObjAttr(Color::Cyan, true, Color::Green, 6);
 	auto newObj1 = make_shared<ObjRectangle>(DrawOpt1, V2(100, 100), V2(300, 200));
 	App.LObjets.push_back(newObj1);
