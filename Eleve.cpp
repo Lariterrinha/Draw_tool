@@ -13,6 +13,7 @@
 #include "Tool.h"
 
 using namespace std;
+Color gBackgroundColor = Color::Black;
 static std::vector<std::string> gHistory;
 static std::shared_ptr<Tool> gPreviousTool;
 
@@ -95,7 +96,6 @@ void bntSendToBack(Model& Data)
 	}
 }
 
-// Etape 6: Drawing Options - cycle through colors, thickness, fill
 void bntCycleBorderColor(Model& Data)
 {
 	static int idx = 0;
@@ -174,6 +174,21 @@ void bntEditPoints(Model& Data)
 	Data.currentTool = make_shared<ToolEditPoints>();
 }
 
+void bntCycleBackground(Model& Data)
+{
+	static int idx = 0;
+	Color colors[] = {
+		Color::Black,
+		Color::White,
+		Color::Gray,
+		Color::Blue,
+		Color::Cyan,
+		Color::Magenta
+	};
+	idx = (idx + 1) % 6;
+	gBackgroundColor = colors[idx];
+}
+
 
 void initApp(Model& App)
 {
@@ -197,6 +212,12 @@ void initApp(Model& App)
 	// button Circle
 	auto B3 = make_shared<Button>("Outil Circle", V2(x, 0), V2(s, s), "outil_ellipse.png", bntToolCircleClick);
 	App.LButtons.push_back(B3);
+	 x += s;
+
+	 // button Polygone
+	 auto B12 = make_shared<Button>("Polygon", V2(x, 0), V2(s, s),
+		 "outil_polygone.png", bntToolPolygonClick);
+	 App.LButtons.push_back(B12);
 	 x += s;
 
 	// button Clean
@@ -239,10 +260,15 @@ void initApp(Model& App)
 	auto B11 = make_shared<Button>("Filled", V2(x, 0), V2(s, s), "outil_no_fill.png", bntToggleFilled);
 	App.LButtons.push_back(B11);
 	 x += s;
+	 
+	 auto BEditPts = make_shared<Button>("EditPts", V2(x, 0), V2(s, s),
+		 "outil_corner.png", bntEditPoints);
+	 App.LButtons.push_back(BEditPts);
+	 x += s;
 
-	 auto B12 = make_shared<Button>("Polygon", V2(x, 0), V2(s, s),
-		 "outil_polygone.png", bntToolPolygonClick);
-	 App.LButtons.push_back(B12);
+	 auto Bbg = make_shared<Button>("BgColor", V2(x, 0), V2(s, s),
+		 "outil_paint.png", bntCycleBackground);
+	 App.LButtons.push_back(Bbg);
 	 x += s;
 
 	 auto BSave = make_shared<Button>("Save", V2(x, 0), V2(s, s),
@@ -260,10 +286,6 @@ void initApp(Model& App)
 	 App.LButtons.push_back(BUndo);
 	 x += s;
 
-	 auto BEditPts = make_shared<Button>("EditPts", V2(x, 0), V2(s, s),
-		 "outil_corner.png", bntEditPoints);
-	 App.LButtons.push_back(BEditPts);
-	 x += s;
 
 
 	// put two objets in the scene
@@ -353,7 +375,7 @@ void drawCursor(Graphics& G, const Model& D)
 void drawApp(Graphics& G, const Model & D)
 {
 	// reset with a black background
-	G.clearWindow(Color::Black);
+	G.clearWindow(gBackgroundColor);
 
 	// draw all geometric objects
 	for (auto& Obj : D.LObjets)
