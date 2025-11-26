@@ -4,6 +4,7 @@
 #include <typeinfo>
 #include <fstream>
 #include <sstream>
+#include <vector>
 #include "V2.h"
 #include "Graphics.h"
 #include "Event.h" 
@@ -14,10 +15,43 @@
 
 using namespace std;
 
-// ESC : close window
+// ------------------------------------
+// Histórico de cenas para UNDO
+// ------------------------------------
+static std::vector<std::string> gHistory;
 
-///////////////////////////////////////////////////////////////////////////////
-//
+// transforma a cena atual em uma string
+std::string sceneToString(const Model& Data)
+{
+	std::ostringstream ss;
+	for (auto& obj : Data.LObjets)
+	{
+		if (obj) ss << obj->serialize() << "\n";
+	}
+	return ss.str();
+}
+
+void stringToScene(const std::string& snapshot, Model& Data)
+{
+	std::istringstream in(snapshot);
+	Data.LObjets.clear();
+
+	std::string line;
+	while (std::getline(in, line))
+	{
+		auto obj = ObjGeom::deserialize(line);
+		if (obj) Data.LObjets.push_back(obj);
+	}
+}
+
+void saveSceneSnapshot(Model& Data)
+{
+	gHistory.push_back(sceneToString(Data));
+
+	if (gHistory.size() > 50)
+		gHistory.erase(gHistory.begin());
+}
+
 //		setup screen
 
 int main(int argc, char* argv[])
@@ -29,9 +63,8 @@ int main(int argc, char* argv[])
 void bntToolSegmentClick(Model& Data)   { Data.currentTool = make_shared<ToolSegment>(); }
 void bntToolRectangleClick(Model& Data) { Data.currentTool = make_shared<ToolRectangle>(); }
 void bntToolCircleClick(Model& Data) { Data.currentTool = make_shared<ToolCircle>(); }
-void bntToolDelete(Model& Data) 
+void bntToolDelete(Model& Data)
 {
-	// se ferramenta atual for ToolSelect e tiver seleção -> apagar só seleção
 	if (Data.currentTool)
 	{
 		ToolSelect* ts = dynamic_cast<ToolSelect*>(Data.currentTool.get());
@@ -41,9 +74,10 @@ void bntToolDelete(Model& Data)
 			return;
 		}
 	}
-	// senão limpa toda a cena
+	saveSceneSnapshot(Data); 
 	Data.LObjets.clear();
 }
+
 
 void bntToolSelect(Model& Data) { Data.currentTool = make_shared<ToolSelect>(); }
 
@@ -104,11 +138,7 @@ void bntSaveScene(Model& Data) {
 	std::ofstream out("scene.txt");
 	if (!out) return;
 
-	for (auto& obj : Data.LObjets)
-	{
-		if (obj)
-			out << obj->serialize() << "\n";
-	}
+	out << sceneToString(Data);   
 }
 
 void bntLoadScene(Model& Data)
@@ -116,17 +146,23 @@ void bntLoadScene(Model& Data)
 	std::ifstream in("scene.txt");
 	if (!in) return;
 
-	Data.LObjets.clear();
+	saveSceneSnapshot(Data); 
 
-	std::string line;
-	while (std::getline(in, line))
-	{
-		auto obj = ObjGeom::deserialize(line);
-		if (obj)
-			Data.LObjets.push_back(obj);
-	}
+	std::ostringstream buffer;
+	buffer << in.rdbuf();
+	string snapshot = buffer.str();
+
+	stringToScene(snapshot, Data);
 }
 
+void bntUndo(Model& Data) {
+	if (gHistory.empty()) { return; }
+
+	std::string snapshot = gHistory.back();
+	gHistory.pop_back();
+
+	stringToScene(snapshot, Data);
+}
 
 void initApp(Model& App)
 {
@@ -198,17 +234,21 @@ void initApp(Model& App)
 	 App.LButtons.push_back(B12);
 	 x += s;
 
-	 // botão Save
 	 auto BSave = make_shared<Button>("Save", V2(x, 0), V2(s, s),
 		 "outil_save.png", bntSaveScene);  
 	 App.LButtons.push_back(BSave);
 	 x += s;
 
-	 // botão Load
 	 auto BLoad = make_shared<Button>("Load", V2(x, 0), V2(s, s),
 		 "outil_load.png", bntLoadScene);  
 	 App.LButtons.push_back(BLoad);
 	 x += s;
+
+	 auto BUndo = make_shared<Button>("Undo", V2(x, 0), V2(s, s),
+		 "outil_undo.png", bntUndo);
+	 App.LButtons.push_back(BUndo);
+	 x += s;
+
 
 
 	// put two objets in the scene
@@ -219,6 +259,8 @@ void initApp(Model& App)
 	ObjAttr DrawOpt2 = ObjAttr(Color::Red, true, Color::Blue, 5);
 	auto newObj2 = make_shared<ObjRectangle>(DrawOpt2, V2(500, 300), V2(600, 600));
 	App.LObjets.push_back(newObj2);
+
+	saveSceneSnapshot(App);
 }
 
 /////////////////////////////////////////////////////////////////////////

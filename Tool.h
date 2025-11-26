@@ -8,7 +8,9 @@
 
 using namespace std;
 
-enum State { WAIT, INTERACT  };
+enum State { WAIT, INTERACT };
+
+void saveSceneSnapshot(Model& Data);
 
 ////////////////////////////////////////////////////////////////////
 
@@ -46,14 +48,16 @@ public :
 			}
 		}
 
-		if (E.Type == EventType::MouseUp && E.info == "0") // left mouse button released
+		if (E.Type == EventType::MouseUp && E.info == "0")
 		{
 			if (currentState == State::INTERACT)
 			{
-				// add object in the scene
+				saveSceneSnapshot(Data);
+
 				V2 P2 = Data.currentMousePos;
 				auto newObj = make_shared<ObjSegment>(Data.drawingOptions, Pstart, P2);
 				Data.LObjets.push_back(newObj);
+
 				currentState = State::WAIT;
 				return;
 			}
@@ -93,18 +97,21 @@ public:
 			}
 		}
 
-		if (E.Type == EventType::MouseUp && E.info == "0") // left mouse button released
+		if (E.Type == EventType::MouseUp && E.info == "0")
 		{
 			if (currentState == State::INTERACT)
 			{
-				// add object in the scene
+				saveSceneSnapshot(Data);  
+
 				V2 P2 = Data.currentMousePos;
 				auto newObj = make_shared<ObjRectangle>(Data.drawingOptions, Pstart, P2);
 				Data.LObjets.push_back(newObj);
+
 				currentState = State::WAIT;
 				return;
 			}
 		}
+
 	}
 
 	void draw(Graphics& G, const Model& Data) override
@@ -143,14 +150,16 @@ public:
 			}
 		}
 
-		if (E.Type == EventType::MouseUp && E.info == "0") // left mouse button released
+		if (E.Type == EventType::MouseUp && E.info == "0")
 		{
 			if (currentState == State::INTERACT)
 			{
-				// add object in the scene
+				saveSceneSnapshot(Data);  
+
 				V2 P2 = Data.currentMousePos;
 				auto newObj = make_shared<ObjCircle>(Data.drawingOptions, Pstart, P2);
 				Data.LObjets.push_back(newObj);
+
 				currentState = State::WAIT;
 				return;
 			}
@@ -218,6 +227,8 @@ public:
 	{
 		if (points_.size() >= 2)
 		{
+			saveSceneSnapshot(Data);  
+
 			auto newObj = make_shared<ObjPolyLine>(Data.drawingOptions, points_);
 			Data.LObjets.push_back(newObj);
 		}
@@ -225,11 +236,11 @@ public:
 		currentState = WAIT;
 	}
 
+
 	void draw(Graphics& G, const Model& Data) override
 	{
 		if (currentState == INTERACT && points_.size() > 0)
 		{
-			// Desenhar segmentos já confirmados
 			for (size_t i = 0; i < points_.size() - 1; ++i)
 				G.drawLine(points_[i], points_[i + 1],
 					Data.drawingOptions.borderColor_,
@@ -253,13 +264,14 @@ public:
 
 	ToolSelect() : Tool(), selectedObj_(nullptr) {}
 
-	// retorna seleção
 	std::shared_ptr<ObjGeom> getSelected() const { return selectedObj_; }
 
-	// remove a seleção da cena (procura por ponteiro)
 	void deleteSelection(Model& Data)
 	{
 		if (!selectedObj_) return;
+
+		saveSceneSnapshot(Data);   
+
 		for (auto it = Data.LObjets.begin(); it != Data.LObjets.end(); ++it)
 		{
 			if (it->get() == selectedObj_.get())
@@ -274,7 +286,9 @@ public:
 	void bringToFront(Model& Data)
 	{
 		if (!selectedObj_) return;
-		// find and move to end
+
+		saveSceneSnapshot(Data); 
+
 		for (auto it = Data.LObjets.begin(); it != Data.LObjets.end(); ++it)
 		{
 			if (it->get() == selectedObj_.get())
@@ -287,11 +301,14 @@ public:
 		}
 	}
 
+
 	// move object to back (start of list = drawn first = behind)
 	void sendToBack(Model& Data)
 	{
 		if (!selectedObj_) return;
-		// find and move to beginning
+
+		saveSceneSnapshot(Data);
+
 		for (auto it = Data.LObjets.begin(); it != Data.LObjets.end(); ++it)
 		{
 			if (it->get() == selectedObj_.get())
@@ -303,6 +320,7 @@ public:
 			}
 		}
 	}
+
 
 	void processEvent(const Event& E, Model& Data) override
 	{
