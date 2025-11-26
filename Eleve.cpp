@@ -93,6 +93,11 @@ void bntToggleFilled(Model& Data)
 	Data.drawingOptions.isFilled_ = !Data.drawingOptions.isFilled_;
 }
  
+void bntToolPolygonClick(Model& Data)
+{
+	Data.currentTool = make_shared<ToolPolygonalLine>();
+}
+
 void initApp(Model& App)
 {
 	// choose default tool
@@ -157,6 +162,12 @@ void initApp(Model& App)
 	auto B11 = make_shared<Button>("Filled", V2(x, 0), V2(s, s), "outil_no_fill.png", bntToggleFilled);
 	App.LButtons.push_back(B11);
 	 x += s;
+
+	 auto B12 = make_shared<Button>("Polygon", V2(x, 0), V2(s, s),
+		 "error.png", bntToolPolygonClick);
+	 App.LButtons.push_back(B12);
+	 x += s;
+
 
 
 	// put two objets in the scene

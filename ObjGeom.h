@@ -167,3 +167,48 @@ public:
 		return dist <= r + 1.0; // toleranc
 	}
 };
+
+
+class ObjPolyLine : public ObjGeom
+{
+	std::vector<V2> pts_;
+
+public:
+	ObjPolyLine(const ObjAttr& A, const std::vector<V2>& P)
+		: ObjGeom(A), pts_(P) {}
+
+	void draw(Graphics& G) override
+	{
+		for (size_t i = 0; i < pts_.size() - 1; ++i)
+			G.drawLine(pts_[i], pts_[i + 1], drawInfo_.borderColor_, drawInfo_.thickness_);
+	}
+
+	bool contains(const V2& P) const override
+	{
+		// seleção simplificada: distância do ponto a cada segmento
+		for (size_t i = 0; i < pts_.size() - 1; ++i)
+		{
+			V2 A = pts_[i];
+			V2 B = pts_[i + 1];
+
+			double L = (B - A).norm();
+			double d = fabs((P - A).norm() + (P - B).norm() - L);
+			if (d < 4.0) return true;
+		}
+		return false;
+	}
+
+	void getBoundingBox(V2& P, V2& size) const override
+	{
+		int minx = 99999, miny = 99999, maxx = -99999, maxy = -99999;
+		for (auto& p : pts_)
+		{
+			minx = std::min(minx, p.x);
+			miny = std::min(miny, p.y);
+			maxx = std::max(maxx, p.x);
+			maxy = std::max(maxy, p.y);
+		}
+		P = V2(minx, miny);
+		size = V2(maxx - minx, maxy - miny);
+	}
+};

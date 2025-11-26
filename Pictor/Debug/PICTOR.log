@@ -1,20 +1,13 @@
-﻿  Color.cpp
-  GL.cpp
-  Graphics.cpp
+﻿  GL.cpp
   Eleve.cpp
-D:\franca\ESIEE\E4-S1\Advanced C++\GIthub\PICTOR__GITHUB_PRIVADO\ObjGeom.h(146,22): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+C:\Users\biasa\Desktop\aa\Draw_tool\ObjGeom.h(146,22): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
   (compilando o arquivo fonte 'Eleve.cpp')
   
-D:\franca\ESIEE\E4-S1\Advanced C++\GIthub\PICTOR__GITHUB_PRIVADO\ObjGeom.h(148,21): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+C:\Users\biasa\Desktop\aa\Draw_tool\ObjGeom.h(148,21): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
   (compilando o arquivo fonte 'Eleve.cpp')
   
-D:\franca\ESIEE\E4-S1\Advanced C++\GIthub\PICTOR__GITHUB_PRIVADO\Tool.h(171,24): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
+C:\Users\biasa\Desktop\aa\Draw_tool\Tool.h(171,24): warning C4244: 'argumento': conversão de 'int' para 'float', possível perda de dados
   (compilando o arquivo fonte 'Eleve.cpp')
   
-  picoPNG.cpp
-  Texture.cpp
-  V2.cpp
   Gerando Código...
-  PICTOR.vcxproj -> D:\franca\ESIEE\E4-S1\Advanced C++\GIthub\PICTOR__GITHUB_PRIVADO\Debug\Pictor.exe
-  'pwsh.exe' não é reconhecido como um comando interno
-  ou externo, um programa operável ou um arquivo em lotes.
+  PICTOR.vcxproj -> C:\Users\biasa\Desktop\aa\Draw_tool\Debug\Pictor.exe

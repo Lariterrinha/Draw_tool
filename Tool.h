@@ -1,4 +1,4 @@
-/* Copyright (c) 2024 Lilian Buzer - All rights reserved - */
+﻿/* Copyright (c) 2024 Lilian Buzer - All rights reserved - */
 #pragma once
 
 #include <string>
@@ -174,6 +174,76 @@ public:
 	}
 };
 
+class ToolPolygonalLine : public Tool
+{
+	std::vector<V2> points_;   // lista de vértices
+public:
+
+	ToolPolygonalLine() : Tool() {}
+
+	void processEvent(const Event& E, Model& Data) override
+	{
+		// Clique ESQUERDO adiciona ponto
+		if (E.Type == EventType::MouseDown && E.info == "0")
+		{
+			if (currentState == WAIT)
+			{
+				points_.clear();
+				points_.push_back(Data.currentMousePos);
+				currentState = INTERACT;
+			}
+			else if (currentState == INTERACT)
+			{
+				points_.push_back(Data.currentMousePos);
+			}
+			return;
+		}
+
+		// ENTER → finalizar
+		if (E.Type == EventType::KeyDown && E.info == "\r")
+		{
+			finish(Data);
+			return;
+		}
+
+		// Clique DIREITO → finalizar
+		if (E.Type == EventType::MouseDown && E.info == "2")
+		{
+			finish(Data);
+			return;
+		}
+	}
+
+	void finish(Model& Data)
+	{
+		if (points_.size() >= 2)
+		{
+			auto newObj = make_shared<ObjPolyLine>(Data.drawingOptions, points_);
+			Data.LObjets.push_back(newObj);
+		}
+		points_.clear();
+		currentState = WAIT;
+	}
+
+	void draw(Graphics& G, const Model& Data) override
+	{
+		if (currentState == INTERACT && points_.size() > 0)
+		{
+			// Desenhar segmentos já confirmados
+			for (size_t i = 0; i < points_.size() - 1; ++i)
+				G.drawLine(points_[i], points_[i + 1],
+					Data.drawingOptions.borderColor_,
+					Data.drawingOptions.thickness_);
+
+			// Desenhar pré-visualização do próximo segmento
+			G.drawLine(points_.back(), Data.currentMousePos,
+				Data.drawingOptions.borderColor_,
+				Data.drawingOptions.thickness_);
+		}
+	}
+};
+
+
 class ToolSelect : public Tool
 {
 protected:
@@ -183,10 +253,10 @@ public:
 
 	ToolSelect() : Tool(), selectedObj_(nullptr) {}
 
-	// retorna sele��o
+	// retorna seleção
 	std::shared_ptr<ObjGeom> getSelected() const { return selectedObj_; }
 
-	// remove a sele��o da cena (procura por ponteiro)
+	// remove a seleção da cena (procura por ponteiro)
 	void deleteSelection(Model& Data)
 	{
 		if (!selectedObj_) return;
@@ -236,7 +306,7 @@ public:
 
 	void processEvent(const Event& E, Model& Data) override
 	{
-		// sele��o no MouseUp (bot�o esquerdo)
+		// seleção no MouseUp (botão esquerdo)
 		if (E.Type == EventType::MouseUp && E.info == "0")
 		{
 			std::shared_ptr<ObjGeom> found = nullptr;
@@ -262,7 +332,7 @@ public:
 	{
 		if (!selectedObj_) return;
 
-		// usa getBoundingBox polim�rfico
+		// usa getBoundingBox polimórfico
 		V2 P, size;
 		selectedObj_->getBoundingBox(P, size);
 		// desenha moldura magenta um pouco maior
